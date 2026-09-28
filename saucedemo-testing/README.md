@@ -38,6 +38,28 @@ Saucedemo — учебный интернет-магазин с полным ц�
 
 Проект построен по паттерну **Page Object Model (POM)** — каждая страница приложения представлена отдельным классом с локаторами и действиями. Тесты не работают с локаторами напрямую — они вызывают методы Page Object'ов.
 
+```
+src
+├── main/java/org.example
+│   ├── config/         ConfigReader — чтение config.properties
+│   ├── driver/         DriverFactory — создание браузера
+│   ├── pages/          Page Object'ы:
+│   │   ├── BasePage              базовая логика (ожидания, клики, навигация)
+│   │   ├── LoginPage             страница входа
+│   │   ├── InventoryPage         каталог товаров
+│   │   ├── CartPage              корзина
+│   │   ├── CheckoutPage          форма оформления заказа
+│   │   └── CheckoutCompletePage  страница подтверждения
+│   └── utils/          ScreenshotUtils — сохранение скриншотов
+│
+└── test
+    ├── java/org.example
+    │   ├── tests/      Тестовые классы
+    │   └── utils/      ScreenshotOnFailureExtension — скриншот при падении
+    └── resources
+        ├── config.properties    Настройки (browser, base.url, таймауты)
+        └── logback-test.xml     Конфигурация логирования
+```
 
 ### Ключевые особенности
 
@@ -55,7 +77,93 @@ Saucedemo — учебный интернет-магазин с полным ц�
 
 ### Требования
 
-- JDK 21+
-- Google Chrome (последняя версия)
-- Maven 3.8+
+- **JDK 21+** — [скачать Temurin](https://adoptium.net/)
+- **Google Chrome** (последняя версия)
+- **Maven 3.8+** — [инструкция по установке](https://maven.apache.org/install.html)
 
+### Команды Maven
+
+Запустить все тесты:
+
+```bash
+mvn clean test
+```
+
+Запустить только E2E-тесты (по тегу):
+
+```bash
+mvn test -Dgroups=e2e
+```
+
+Запустить один класс:
+
+```bash
+mvn test -Dtest=LoginTest
+```
+
+Запустить один метод:
+
+```bash
+mvn test -Dtest=LoginTest#successfulLogin
+```
+
+Сгенерировать HTML-отчёт после прогона:
+
+```bash
+mvn surefire-report:report
+```
+
+Открыть отчёт:
+
+```
+target/site/surefire-report.html
+```
+
+### Запуск через IDE
+
+Любой тестовый класс можно запустить в IntelliJ IDEA:
+
+1. Открыть класс, например `LoginTest.java`.
+2. Правой кнопкой по имени класса → **Run 'LoginTest'**.
+3. Или по методу → **Run 'имя_метода()'**.
+
+Результат — в панели **Run** внизу IDE.
+
+## ⚙️ Настройки
+
+Файл `src/test/resources/config.properties`:
+
+```properties
+browser=chrome          # chrome | firefox | edge
+base.url=https://www.saucedemo.com/
+implicit.wait=5         # неявное ожидание, секунды
+explicit.wait=10        # явное ожидание WebDriverWait, секунды
+headless=false          # true — без окна браузера
+```
+
+## 📊 Артефакты после прогона
+
+| Путь | Содержимое |
+|------|------------|
+| `target/screenshots/` | PNG-снимки при падении тестов |
+| `target/logs/tests.log` | Логи выполнения всех тестов |
+| `target/surefire-reports/` | XML-отчёты JUnit |
+| `target/site/surefire-report.html` | **HTML-отчёт** (после `surefire-report:report`) |
+
+## 📸 Скриншоты
+
+### HTML-отчёт о тестах
+
+Все 8 тестов зелёные, Success Rate — 100%.
+
+### Детализация тестов
+
+Каждый тест с временем выполнения.
+
+## 📝 Лицензия
+
+© 2026 Blackshadow. Все права защищены.
+
+Данный проект является личной интеллектуальной собственностью автора. Копирование, распространение, публикация или коммерческое использование кода и материалов без письменного разрешения автора запрещены.
+
+Для получения разрешения на использование — свяжитесь со мной.
