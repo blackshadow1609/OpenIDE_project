@@ -16,7 +16,7 @@ public class LoginPage extends BasePage {
     }
 
     public LoginPage open() {
-        driver.get(ConfigReader.get("base.url"));
+        navigateTo(ConfigReader.get("base.url"));
         return this;
     }
 

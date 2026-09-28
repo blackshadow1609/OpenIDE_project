@@ -28,15 +28,23 @@ public class PurchaseE2ETest extends BaseTest {
         inventory.addToCart("Sauce Labs Backpack");
         inventory.addToCart("Sauce Labs Bolt T-Shirt");
 
-        Assertions.assertEquals("2", inventory.getCartBadgeCount(),
+        String badge = inventory.getCartBadgeCount();
+        log.info("Счётчик корзины после добавления двух товаров: '{}'", badge);
+        Assertions.assertEquals("2", badge,
                 "Счётчик должен показывать '2' после добавления двух товаров");
 
         log.info("Шаг 3: Переходим в корзину");
         CartPage cart = inventory.goToCart();
-        Assertions.assertTrue(cart.isProductInCart("Sauce Labs Backpack"),
-                "Первый товар должен быть в корзине");
-        Assertions.assertTrue(cart.isProductInCart("Sauce Labs Bolt T-Shirt"),
-                "Второй товар должен быть в корзине");
+        log.info("URL корзины: {}", driver.getCurrentUrl());
+
+        boolean hasBackpack = cart.isProductInCart("Sauce Labs Backpack");
+        log.info("Backpack в корзине: {}", hasBackpack);
+
+        boolean hasTShirt = cart.isProductInCart("Sauce Labs Bolt T-Shirt");
+        log.info("Bolt T-Shirt в корзине: {}", hasTShirt);
+
+        Assertions.assertTrue(hasBackpack, "Первый товар должен быть в корзине");
+        Assertions.assertTrue(hasTShirt, "Второй товар должен быть в корзине");
 
         log.info("Шаг 4: Оформляем заказ");
         CheckoutPage checkout = cart.goToCheckout();
