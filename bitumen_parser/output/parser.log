@@ -1,0 +1,57 @@
+2026-09-30 22:18:02,544 [INFO] main: Старт сбора цен на мастику Технониколь
+2026-09-30 22:18:02,544 [INFO] main: ============================================================
+2026-09-30 22:18:02,545 [INFO] main: Запускаем парсер: ksk24.ru
+2026-09-30 22:18:02,545 [INFO] main: ============================================================
+2026-09-30 22:18:03,062 [INFO] parsers.base_parser: [ksk24.ru] Браузер запущен, UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+2026-09-30 22:18:03,062 [INFO] parsers.base_parser: [ksk24.ru] Прогрев: открываем https://ksk24.ru
+2026-09-30 22:18:06,164 [INFO] parsers.parser_ksk24: [ksk24.ru] Пробуем URL: https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:06,244 [INFO] utils.robots_checker: [ksk24.ru] robots.txt разрешает парсинг https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:07,306 [INFO] parsers.base_parser: [ksk24.ru] GET https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C (попытка 1/3)
+2026-09-30 22:18:09,759 [INFO] parsers.parser_ksk24: [ksk24.ru] На https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C найдено карточек: 4
+2026-09-30 22:18:09,861 [INFO] parsers.parser_ksk24: [ksk24.ru] Пробуем URL: https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0
+2026-09-30 22:18:09,926 [INFO] utils.robots_checker: [ksk24.ru] robots.txt разрешает парсинг https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0
+2026-09-30 22:18:10,584 [INFO] parsers.base_parser: [ksk24.ru] GET https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0 (попытка 1/3)
+2026-09-30 22:18:13,413 [INFO] parsers.parser_ksk24: [ksk24.ru] На https://ksk24.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0 найдено карточек: 22
+2026-09-30 22:18:13,944 [INFO] parsers.parser_ksk24: [ksk24.ru] ИТОГО: 15 уникальных позиций Технониколь
+2026-09-30 22:18:13,999 [INFO] parsers.base_parser: [ksk24.ru] Браузер закрыт
+2026-09-30 22:18:14,000 [INFO] main: [ksk24.ru] Получено записей: 15
+2026-09-30 22:18:14,000 [INFO] main: ============================================================
+2026-09-30 22:18:14,000 [INFO] main: Запускаем парсер: tophouse.ru
+2026-09-30 22:18:14,000 [INFO] main: ============================================================
+2026-09-30 22:18:14,446 [INFO] parsers.base_parser: [tophouse.ru] Браузер запущен, UA=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36
+2026-09-30 22:18:14,447 [INFO] parsers.base_parser: [tophouse.ru] Прогрев: открываем https://www.tophouse.ru
+2026-09-30 22:18:17,088 [INFO] parsers.parser_tophouse: [tophouse.ru] Пробуем URL: https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:17,120 [INFO] utils.robots_checker: [tophouse.ru] robots.txt разрешает парсинг https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:17,443 [INFO] parsers.base_parser: [tophouse.ru] GET https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C (попытка 1/3)
+2026-09-30 22:18:20,228 [INFO] parsers.parser_tophouse: [tophouse.ru] На https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C найдено карточек: 30
+2026-09-30 22:18:21,121 [INFO] parsers.parser_tophouse: [tophouse.ru] Пробуем URL: https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:21,154 [INFO] utils.robots_checker: [tophouse.ru] robots.txt разрешает парсинг https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C
+2026-09-30 22:18:21,770 [INFO] parsers.base_parser: [tophouse.ru] GET https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C (попытка 1/3)
+2026-09-30 22:18:24,284 [INFO] parsers.parser_tophouse: [tophouse.ru] На https://www.tophouse.ru/search/?q=%D0%9C%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BD%D0%B8%D0%BA%D0%BE%D0%BB%D1%8C найдено карточек: 30
+2026-09-30 22:18:25,087 [INFO] parsers.parser_tophouse: [tophouse.ru] Пробуем URL: https://www.tophouse.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0
+2026-09-30 22:18:25,126 [INFO] utils.robots_checker: [tophouse.ru] robots.txt разрешает парсинг https://www.tophouse.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0
+2026-09-30 22:18:25,411 [INFO] parsers.base_parser: [tophouse.ru] GET https://www.tophouse.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0 (попытка 1/3)
+2026-09-30 22:18:28,076 [INFO] parsers.parser_tophouse: [tophouse.ru] На https://www.tophouse.ru/search/?q=%D0%BC%D0%B0%D1%81%D1%82%D0%B8%D0%BA%D0%B0 найдено карточек: 30
+2026-09-30 22:18:28,718 [INFO] parsers.parser_tophouse: [tophouse.ru] ИТОГО: 28 уникальных позиций Технониколь
+2026-09-30 22:18:28,784 [INFO] parsers.base_parser: [tophouse.ru] Браузер закрыт
+2026-09-30 22:18:28,784 [INFO] main: [tophouse.ru] Получено записей: 28
+2026-09-30 22:18:28,784 [INFO] main: Парсер 'stroy-podskazka.ru' не подключён — пропускаем
+2026-09-30 22:18:28,784 [INFO] main: ============================================================
+2026-09-30 22:18:28,784 [INFO] main: Всего собрано записей: 43
+2026-09-30 22:18:28,791 [INFO] main: CSV сохранён: F:\Users\Alina\source\repos\OpenIDE_project\bitumen_parser\output\bitumen_prices.csv (43 строк)
+2026-09-30 22:18:28,792 [INFO] main: ============================================================
+2026-09-30 22:18:28,792 [INFO] main: СВОДКА
+2026-09-30 22:18:28,792 [INFO] main: ============================================================
+2026-09-30 22:18:28,792 [INFO] main: Всего позиций: 43
+2026-09-30 22:18:28,795 [INFO] main: По источникам:
+2026-09-30 22:18:28,796 [INFO] main:   - ksk24.ru                  всего:  15 | с ценой:  15
+2026-09-30 22:18:28,796 [INFO] main:   - tophouse.ru               всего:  28 | с ценой:   3
+2026-09-30 22:18:28,796 [INFO] main: Топ-5 самых дешёвых позиций (с указанной ценой):
+2026-09-30 22:18:28,797 [INFO] main:   - Мастика приклеивающая ТН №23 (Фиксер) Картридж 0,4 кг, 310 м |   398.00 ₽ | ksk24.ru
+2026-09-30 22:18:28,797 [INFO] main:   - Мастика (клей) для гибкой черепицы 310мл ТЕХНОНИКОЛЬ Шинглас |   608.58 ₽ | tophouse.ru
+2026-09-30 22:18:28,797 [INFO] main:   - Мастика гидроизоляционная ТН №24 (МГТН), ведро 3кг           |  1525.00 ₽ | ksk24.ru
+2026-09-30 22:18:28,797 [INFO] main:   - Мастика кровельная ТН №21 (Техномаст), ведро 3 кг            |  2036.00 ₽ | ksk24.ru
+2026-09-30 22:18:28,797 [INFO] main:   - Мастика приклеивающая ТН №23 (Фиксер) 3,6 кг                 |  2253.00 ₽ | ksk24.ru
+2026-09-30 22:18:28,798 [INFO] main: Уникальных источников: 2
+2026-09-30 22:18:28,798 [INFO] main: Сохранено в: F:\Users\Alina\source\repos\OpenIDE_project\bitumen_parser\output\bitumen_prices.csv
+2026-09-30 22:18:28,798 [INFO] main: Готово
