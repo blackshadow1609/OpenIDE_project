@@ -21,13 +21,16 @@
         </div>
     </div>
 
-Фильтр по бренду — прямой поиск «Бренд: ТехноНиколь» в блоке характеристик.
+Фильтр по бренду — прямой поиск «Бренд: ТехноНиколь» в блоке характеристик
++ дополнительное исключение суб-брендов AquaMast / Imperial / Isobox,
+которые на tophouse причислены к материнскому бренду TechnoNICOL,
+но фактически не являются целевой продукцией ТН.
 
 Стратегия:
     1. Прогрев — открываем главную.
     2. Проходим по SEARCH_URLS.
     3. Ждём появления карточек (div.product).
-    4. Фильтруем по бренду — через поле «Бренд:».
+    4. Фильтруем по бренду — через поле «Бренд:» + исключаем суб-бренды.
     5. Извлекаем название, цену, ссылку, единицу.
     6. Возвращаем список записей.
 """
@@ -67,6 +70,12 @@ LINK_SELECTORS = [
 
 # Поле «Бренд: X» внутри блока характеристик
 BRAND_CHAR_SELECTOR = 'div.product__characteristic'
+
+# Суб-бренды TechnoNICOL, которые исключаем из отчёта (не целевая продукция ТН).
+EXCLUDE_SUBBRANDS_REGEX = re.compile(
+    r"aquamast|аквамаст|imperial|империал|isobox|изобокс",
+    flags=re.IGNORECASE,
+)
 
 AVAILABILITY_HINTS = [
     "в наличии", "на складе", "под заказ", "нет в наличии",
@@ -173,7 +182,7 @@ class ParserTophouse(BaseParser):
 
     def _parse_card(self, card, idx: int) -> Optional[dict[str, Any]]:
         """Извлечь запись из одной карточки."""
-        # --- Фильтр по бренду: ищем «Бренд: ТехноНиколь» среди характеристик ---
+        # --- Фильтр по бренду + исключение суб-брендов ---
         if not self._has_technonikol_brand(card):
             return None
 
@@ -209,19 +218,39 @@ class ParserTophouse(BaseParser):
 
     def _has_technonikol_brand(self, card) -> bool:
         """
-        Проверить, что в блоке характеристик карточки есть строка
-        «Бренд: ТехноНиколь». Это точнее, чем регулярка по всему тексту.
+        Проверить, что карточка:
+            1) имеет бренд «ТехноНиколь» в характеристиках,
+            2) НЕ является суб-брендом AquaMast / Imperial / Isobox.
+
+        На tophouse AquaMast и Imperial идут под материнским брендом
+        TechnoNICOL, но фактически это отдельная продукция, не «мастика ТН».
         """
         try:
             chars = card.query_selector_all(BRAND_CHAR_SELECTOR)
+            has_tn_brand = False
             for ch in chars:
                 text = (ch.inner_text() or "").strip()
                 # «Бренд: ТехноНиколь» или «Бренд: ТЕХНОНИКОЛЬ» и т.п.
                 if re.match(r"^Бренд\s*:\s*техно\s*н?и?коль", text, flags=re.IGNORECASE):
-                    return True
+                    has_tn_brand = True
+                    break
+
+            if not has_tn_brand:
+                return False
+
+            # Дополнительно проверяем название — если там суб-бренд,
+            # такой товар исключаем.
+            name_el = card.query_selector('a.product__name')
+            if name_el:
+                name = (name_el.get_attribute("title") or "").strip()
+                if not name:
+                    name = (name_el.inner_text() or "").strip()
+                if name and EXCLUDE_SUBBRANDS_REGEX.search(name):
+                    return False
+
+            return True
         except Exception:
-            pass
-        return False
+            return False
 
     def _extract_name(self, card) -> Optional[str]:
         """Название берём из a.product__name[title] — там полный текст без обрезки."""
@@ -340,8 +369,6 @@ class ParserTophouse(BaseParser):
         cleaned_name = re.sub(r"no\.?\s*\d+", " ", cleaned_name, flags=re.IGNORECASE)
 
         # Ищем все вхождения «<число><единица>»
-        #   Единицы: кг, г, л, мл, шт, литр(ов), штук(а/и)
-        #   Разделитель: «20 кг», «20кг», «20,6 л», «0,4 кг»
         matches = re.findall(
             r"(\d+(?:[.,]\d+)?)\s*(кг|г|л|мл|шт|литр(?:ов|а)?|штук(?:а|и)?)\b",
             cleaned_name, flags=re.IGNORECASE,
