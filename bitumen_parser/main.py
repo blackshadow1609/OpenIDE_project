@@ -1,8 +1,12 @@
 """
 Главный модуль проекта «Сравнение цен на битумную мастику Технониколь».
 
-Запускает парсеры трёх сайтов стройматериалов, объединяет результаты,
-выгружает в CSV и печатает краткую сводку в консоль.
+Запускает парсеры ТРЁХ сайтов стройматериалов:
+    1. ksk24.ru        — каталог ksk24
+    2. tophouse.ru     — поиск tophouse
+    3. td-marman.ru    — каталог «Мастики ТЕХНОНИКОЛЬ»
+
+Объединяет результаты, выгружает в CSV и печатает краткую сводку.
 
 Запуск:
     python main.py
@@ -24,14 +28,7 @@ import pandas as pd
 # --- Парсеры ---
 from parsers.parser_ksk24 import ParserKsk24
 from parsers.parser_tophouse import ParserTophouse
-
-# stroy-podskazka оставляем как опциональный: подключаем, только если модуль заполнен.
-try:
-    from parsers.parser_stroy_podskazka import ParserStroyPodskazka
-    HAS_STROY_PODSKAZKA = True
-except Exception:
-    ParserStroyPodskazka = None  # type: ignore
-    HAS_STROY_PODSKAZKA = False
+from parsers.parser_td_marman import ParserTdMarman
 
 
 # ---------- Пути ----------
@@ -56,8 +53,7 @@ CSV_COLUMNS = [
 # ---------- Логирование ----------
 def setup_logging() -> None:
     """
-    Логи пишем одновременно в файл и в консоль. В файл — всё INFO,
-    в консоль — тоже INFO (по просьбе заказчика: видеть прогресс).
+    Логи пишем одновременно в файл и в консоль.
     """
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -110,9 +106,8 @@ def run_parser(parser_cls, label: str) -> list[dict[str, Any]]:
 def normalize_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Приводим все записи к единому виду:
-      - приводим к нижнему регистру ключи (на всякий случай);
-      - обрезаем пробелы в строковых полях;
       - гарантируем наличие всех колонок из CSV_COLUMNS;
+      - обрезаем пробелы в строковых полях;
       - цена — либо float, либо None.
     """
     normalized: list[dict[str, Any]] = []
@@ -120,7 +115,10 @@ def normalize_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         row = {col: r.get(col) for col in CSV_COLUMNS}
 
         # Строковые поля — strip + None для пустых
-        for key in ("product_name", "unit", "package_size", "availability", "url", "source", "scrape_timestamp"):
+        for key in (
+                "product_name", "unit", "package_size",
+                "availability", "url", "source", "scrape_timestamp",
+        ):
             val = row.get(key)
             if isinstance(val, str):
                 val = val.strip()
@@ -145,7 +143,9 @@ def build_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
     df = pd.DataFrame(records, columns=CSV_COLUMNS)
 
     # Сортировка: сначала по источнику, потом по названию
-    df = df.sort_values(by=["source", "product_name"], na_position="last").reset_index(drop=True)
+    df = df.sort_values(
+        by=["source", "product_name"], na_position="last"
+    ).reset_index(drop=True)
     return df
 
 
@@ -182,14 +182,14 @@ def print_summary(df: pd.DataFrame) -> None:
             source, int(row["total"]), int(row["with_price"]),
         )
 
-    # Топ-5 самых дешёвых (только с ценой)
+    # Топ-7 самых дешёвых (только с ценой)
     priced = df[df["price"].notna()].copy()
     if not priced.empty:
-        priced = priced.sort_values("price").head(5)
-        logger.info("Топ-5 самых дешёвых позиций (с указанной ценой):")
+        priced = priced.sort_values("price").head(7)
+        logger.info("Топ-7 самых дешёвых позиций (с указанной ценой):")
         for _, row in priced.iterrows():
             logger.info(
-                "  - %-60s | %8.2f ₽ | %s",
+                "  - %-60s | %9.2f ₽ | %s",
                 (row["product_name"] or "")[:60],
                 row["price"],
                 row["source"],
@@ -209,9 +209,9 @@ def main() -> int:
 
     # Список парсеров в порядке обхода
     parsers: list[tuple[Any, str]] = [
-        (ParserKsk24, "ksk24.ru"),
+        (ParserKsk24,    "ksk24.ru"),
         (ParserTophouse, "tophouse.ru"),
-        (ParserStroyPodskazka if HAS_STROY_PODSKAZKA else None, "stroy-podskazka.ru"),
+        (ParserTdMarman, "td-marman.ru"),
     ]
 
     # Собираем все записи

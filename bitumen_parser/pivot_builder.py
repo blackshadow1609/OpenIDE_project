@@ -33,15 +33,22 @@ PIVOT_CSV = OUTPUT_DIR / "bitumen_prices_pivot.csv"
 SUMMARY_CSV = OUTPUT_DIR / "bitumen_prices_summary.csv"
 
 
+# ---------- Исключения: не-мастики ----------
+
+# Если название содержит «герметик», но НЕ содержит «мастика» — это не наш товар
+EXCLUDE_IF_HERMETIC_AND_NOT_MASTIKA = re.compile(
+    r"герметик", flags=re.IGNORECASE,
+)
+INCLUDE_MASTIKA = re.compile(
+    r"мастика", flags=re.IGNORECASE,
+)
+
+
 # ---------- Алиасы: ручные правила для «сокращённых» обозначений ----------
 
-# Каждая группа: (regex, канонический ярлык)
-# Применяется к нормализованному (lower) названию по очереди.
-# ВАЖНО: порядок важен — более специфичные правила выше.
 PRODUCT_ALIASES: list[tuple[str, str]] = [
     # --- Мастика №23 Фиксер (клей для гибкой черепицы / Шинглас Фиксер) ---
     (r"\bфиксер\b",                                    "n23_фиксер"),
-    # «Фиксер Шинглас» — тот же продукт, ловим по слову Фиксер (выше).
 
     # --- №21 Техномаст (кровельная) ---
     (r"\bтехномаст\b",                                 "n21_техномаст"),
@@ -71,13 +78,38 @@ PRODUCT_ALIASES: list[tuple[str, str]] = [
     # --- №57 защитная алюминиевая ---
     (r"n\s*57\b|№\s*57\b",                             "n57"),
 
+    # --- НОВЫЕ (от td-marman) ---
+    # --- №71 герметизирующая (всё же мастика, хоть и герметизирующая) ---
+    (r"n\s*71\b|№\s*71\b",                             "n71"),
+
+    # --- МБР-65 / МБР-75 / МБР-90 (битумно-резиновые) ---
+    (r"мбр[\s\-]*65",                                  "мбр65"),
+    (r"мбр[\s\-]*75",                                  "мбр75"),
+    (r"мбр[\s\-]*90",                                  "мбр90"),
+
     # --- Пламя Стоп ---
     (r"пламя\s*стоп",                                  "пламя_стоп"),
 ]
 
 
+# ---------- Унификация фасовки для «пограничных» групп ----------
+# Эти маркеры принудительно получают фиксированную фасовку,
+# даже если у источника её нет в названии.
+FORCE_PACKAGE: dict[str, str] = {
+    # Пламя Стоп у ТН существует только в фасовке 20 кг —
+    # у ksk24 фасовка в названии не указана, подтягиваем её.
+    "пламя_стоп": "20кг",
+}
+
+# Эти маркеры, наоборот, ИГНОРИРУЮТ фасовку:
+# №31 у ksk24 в литрах (20,6 л), у td-marman в кг (18 кг) —
+# это одна и та же мастика, сводим в одну группу.
+IGNORE_PACKAGE_MARKERS: set[str] = {
+    "n31",
+}
+
+
 # Слова-шум, удаляемые из названия ПЕРЕД алиасами.
-# После алиасов мы получим канонический ярлык, и шум уже не помешает.
 NOISE_WORDS = [
     # Общие слова
     "мастика", "технониколь", "technonikol", "техно", "николь",
@@ -85,16 +117,15 @@ NOISE_WORDS = [
     "кровельная", "приклеивающая", "гидроизоляционная", "защитная",
     "алюминиевая", "горячая", "морозостойкая", "водоэмульсионная",
     "битумная", "изоляционная", "универсальная", "ремонт", "и",
+    "герметизирующая", "битумно-резиновая", "битумно", "резиновая",
     # Суб-бренды и вторичные названия
     "шинглас", "shinglas", "клей", "для", "гибкой", "черепицы",
-    "картридж",
-    # Единицы продажи и артикулы
-    "ведро", "вед", "меш", "руб", "шт", "штук", "млн",
+    "картридж", "ведро", "вед", "меш", "руб", "шт", "штук",
 ]
 
 
 def _strip_noise(s: str) -> str:
-    """Убираем шумовые слова из строки (они не помогают идентификации)."""
+    """Убираем шумовые слова из строки."""
     for w in NOISE_WORDS:
         s = re.sub(rf"\b{re.escape(w)}\b", " ", s)
     return s
@@ -110,17 +141,15 @@ def _canonical_marker(s: str) -> Optional[str]:
 
 def _canonical_package(s: str) -> Optional[str]:
     """
-    Каноничная фасовка: «20 кг», «3.6 кг», «310 мл» и т.п.
-    Единицы нормализуем: килограмм → кг, литр → л, миллилитр → мл, штук → шт.
+    Каноничная фасовка: «20кг», «3.6кг», «310мл» и т.п.
+    Убираем «№N», нормализуем единицы.
     """
     if not s:
         return None
 
-    # Убираем №NN — на всякий случай, чтобы не путать с фасовкой
     s_clean = re.sub(r"№\s*\d+", " ", s)
     s_clean = re.sub(r"\bn\s*\d+\b", " ", s_clean, flags=re.IGNORECASE)
 
-    # Ищем все «число + единица» и берём ПОСЛЕДНЕЕ (фасовка в конце названия)
     matches = re.findall(
         r"(\d+(?:[.,]\d+)?)\s*(кг|г|л|мл|шт|литр(?:ов|а)?|штук(?:а|и)?)\b",
         s_clean, flags=re.IGNORECASE,
@@ -138,7 +167,6 @@ def _canonical_package(s: str) -> Optional[str]:
     else:
         unit = u
 
-    # Нормализация: 20.0 кг → 20 кг, 3.60 кг → 3.6 кг
     if "." in number:
         number = number.rstrip("0").rstrip(".")
 
@@ -148,36 +176,33 @@ def _canonical_package(s: str) -> Optional[str]:
 def _normalize_name(raw: str) -> str:
     """
     Итоговый канонический ключ группы.
-
-    Примеры:
-        «Мастика кровельная ТН №21 (Техномаст), ведро 20кг»
-            → "n21_техномаст 20кг"
-        «Мастика №21 кровельная ТехноНиколь (Техномаст) 20кг»
-            → "n21_техномаст 20кг"
-        «Мастика приклеивающая ТН №23 (Фиксер) 12 кг»
-            → "n23_фиксер 12кг"
-        «Мастика (клей) для гибкой черепицы 12кг ТЕХНОНИКОЛЬ Шинглас Фиксер»
-            → "n23_фиксер 12кг"
     """
     if not raw:
         return ""
 
     s = raw.lower()
 
-    # 1. Достаём фасовку из ОРИГИНАЛЬНОГО названия (до чистки)
+    # 1. Достаём фасовку из ОРИГИНАЛЬНОГО названия
     package = _canonical_package(s)
 
-    # 2. Чистим шум
-    s = _strip_noise(s)
-
-    # 3. Достаём маркер продукта (n21, n24, фиксер...)
+    # 2. Достаём маркер продукта (n21, n24, фиксер...)
+    #    Сначала пробуем на полной строке (до чистки) — важно для «№ 21 Техномаст»
     marker = _canonical_marker(s)
 
-    # 4. Если маркер не нашли — пробуем на исходной строке
+    # 3. Если не нашли — чистим шум и пробуем снова
     if not marker:
-        marker = _canonical_marker(raw.lower())
+        s_clean = _strip_noise(s)
+        marker = _canonical_marker(s_clean)
+    else:
+        s_clean = _strip_noise(s)
 
-    # 5. Собираем ключ
+    # 3a. Унификация фасовки для «пограничных» случаев
+    if marker in FORCE_PACKAGE:
+        package = FORCE_PACKAGE[marker]
+    elif marker in IGNORE_PACKAGE_MARKERS:
+        package = None
+
+    # 4. Собираем ключ
     parts = []
     if marker:
         parts.append(marker)
@@ -185,8 +210,7 @@ def _normalize_name(raw: str) -> str:
         parts.append(package)
 
     if not parts:
-        # Fallback — первые 50 символов нормализованного имени
-        return re.sub(r"\s+", " ", s).strip()[:50]
+        return re.sub(r"\s+", " ", s_clean).strip()[:50]
 
     return " ".join(parts)
 
@@ -202,13 +226,33 @@ def load_main_csv(path: Path) -> pd.DataFrame:
     return df
 
 
+def filter_records(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Оставляем только мастики: если в названии есть «герметик» и нет «мастика» —
+    исключаем. Это убирает случайный «Герметик битумно-полимерный №42».
+    """
+    before = len(df)
+
+    def keep(name: str) -> bool:
+        name = str(name)
+        if EXCLUDE_IF_HERMETIC_AND_NOT_MASTIKA.search(name) \
+                and not INCLUDE_MASTIKA.search(name):
+            return False
+        return True
+
+    df = df[df["product_name"].apply(keep)].copy()
+    after = len(df)
+    if after < before:
+        logger.info("Отфильтровано не-мастик: %d (осталось %d)", before - after, after)
+    return df
+
+
 def build_pivot(df: pd.DataFrame) -> pd.DataFrame:
     """Добавляем колонку с нормализованным ключом продукта."""
     df = df.copy()
     df["normalized_key"] = df["product_name"].apply(
         lambda x: _normalize_name(str(x) if pd.notna(x) else "")
     )
-    # Fallback package_size
     df["package_size_filled"] = df.apply(
         lambda r: r["package_size"]
         if isinstance(r["package_size"], str) and r["package_size"]
@@ -221,18 +265,6 @@ def build_pivot(df: pd.DataFrame) -> pd.DataFrame:
 def build_summary(df: pd.DataFrame) -> pd.DataFrame:
     """
     Агрегация: одна строка на нормализованный ключ.
-    Колонки:
-        normalized_key
-        product_name_sample  — самое «человекочитаемое» название в группе
-        package_size
-        sources              — список источников через запятую
-        n_offers             — всего предложений в группе
-        n_with_price         — сколько с указанной ценой
-        min_price            — минимальная цена
-        min_price_source     — где дешевле
-        max_price            — максимальная
-        spread               — разница между max и min (в рублях)
-        spread_pct           — разница в % от min
     """
     rows: list[dict[str, Any]] = []
 
@@ -245,10 +277,18 @@ def build_summary(df: pd.DataFrame) -> pd.DataFrame:
         if not names.empty:
             name_sample = max(names, key=len)
 
+        # Предпочитаем фасовку с мл/л, если такие есть, иначе первую
         package_size = None
-        pkgs = group["package_size_filled"].dropna().astype(str)
-        if not pkgs.empty:
-            package_size = pkgs.iloc[0]
+        pkgs = group["package_size_filled"].dropna().astype(str).tolist()
+        if pkgs:
+            def score(p: str) -> int:
+                p = p.lower()
+                if "мл" in p:  return 0
+                if " л" in p:  return 1
+                if "кг" in p:  return 2
+                return 3
+            pkgs_sorted = sorted(pkgs, key=score)
+            package_size = pkgs_sorted[0]
 
         sources = sorted(group["source"].dropna().unique().tolist())
 
@@ -282,7 +322,6 @@ def build_summary(df: pd.DataFrame) -> pd.DataFrame:
         })
 
     summary = pd.DataFrame(rows)
-    # Сортировка: сначала группы с наибольшей разницей, потом по min_price
     if not summary.empty:
         summary = summary.sort_values(
             by=["n_with_price", "spread", "min_price"],
@@ -293,17 +332,18 @@ def build_summary(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def print_summary(summary: pd.DataFrame) -> None:
-    logger.info("=" * 80)
+    logger.info("=" * 90)
     logger.info("СВОДКА: %d уникальных товарных групп", len(summary))
-    logger.info("=" * 80)
+    logger.info("=" * 90)
 
     # --- Группы с несколькими источниками и хотя бы двумя ценами ---
     comparable = summary[(summary["n_offers"] >= 2) & (summary["n_with_price"] >= 2)]
     if not comparable.empty:
         logger.info("")
         logger.info("ГРУППЫ С РЕАЛЬНОЙ РАЗНИЦЕЙ ЦЕН (сравнение):")
-        logger.info("%-58s | %-8s | %10s | %12s | %10s", "Товар", "Фасовка", "Мин ₽", "Макс ₽", "Разница")
-        logger.info("-" * 120)
+        logger.info("%-58s | %-8s | %10s | %12s | %10s",
+                    "Товар", "Фасовка", "Мин ₽", "Макс ₽", "Разница")
+        logger.info("-" * 130)
         for _, row in comparable.iterrows():
             logger.info(
                 "%-58s | %-8s | %10.2f | %12.2f | %+10.2f (%.1f%%)",
@@ -356,6 +396,9 @@ def main() -> int:
     if df.empty:
         logger.warning("Основной CSV пуст")
         return 0
+
+    # Фильтр не-мастик
+    df = filter_records(df)
 
     df_pivot = build_pivot(df)
 
